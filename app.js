@@ -83,42 +83,27 @@ app.post("/upload", (req, res) => {
 
             const imagesArray = req.files.map((image) => {
 
-                let imageObject = {}
+                var imageObject = {}
 
-                imageObject.type = image.mimeType
-                imageObject.path = image.path
-                imageObject.link = image.path.replace("public", "").replace(/\\/g, "/")
-                imageObject.timeUploaded = Date.now()
+                imageObject.path = image.path.replace("public", "").replace(/\\/g, "/")
 
-                sizeOf("public/" + imageObject.link, (err, sizes) => {
-
-                    if(err) {
-                        error(err)
-                    } else {
-                        success(sizes)
-                    }
-                })
-
-                const error = (err) => {
-
-                    console.log(err)
-
-                }
-
-                const success = (data) => {
-
-                    imageObject.width = data.width
-                    imageObject.height = data.height
-                    
-                    console.log(imageObject)
-
-                }
                 
-                return imageObject
+                sizeOf("public/" + imageObject.path, function (err, dimensions) {
+                    if (err) {
+                        console.log(err)
+                    }else{
+                        imageObject.width = dimensions.width
+                        imageObject.height = dimensions.height
+                    }
+                    return imageObject
+                  });
+                  console.log(imageObject)
+            return imageObject
                 
             })
 
-
+            console.log(imagesArray)
+            
             db.collection("uploadtest2").insertMany(imagesArray, (err, result) => {
 
                 if (err) {
@@ -160,59 +145,12 @@ app.get("/images", (req, res) => {
 
 app.get("/collection", (req, res) => {
 
-    db.collection('uploadtest2').find().toArray((err, result) => {
+    db.collection('u').find().toArray((err, result) => {
         
         res.send(result)
 
     })
 });
-
-// resize test
-
-app.get('/test', (req, res) => {
-
-    const imageWidthString = req.query.width;
-    const imageHeightString = req.query.height;
-
-    let width, height
-
-    if (imageWidthString) {
-        width = parseInt(imageWidthString)
-    }
-
-    if (imageHeightString) {
-        height = parseInt(imageHeightString)
-    }
-
-    sharp("test1.png")
-    .resize(width, height)
-    .toFile("public/output/output.png", (err) => {
-
-        console.log(err)
-
-    })
-
-    // const imageWidthString = req.query.width,
-    //     imageFormatString = req.query.format,
-    //     imageHeightString = req.query.height
-
-    // let width, height
-    // if (imageWidthString) {
-    //     width = parseInt(imageWidthString)
-    // }
-    // if (imageHeightString) {
-    //     height = parseInt(imageHeightString)
-    // }
-
-    // res.type(`image/${imageFormatString || 'png'}`)
-
-    // const resized = resize("test1.png", imageFormatString, width, height)
-
-    // console.log(resized)
-
-
-})
-
 
 // set static directory
 app.use(express.static('public'));
