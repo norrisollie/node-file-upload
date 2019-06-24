@@ -8,7 +8,6 @@ const fs = require("fs")
 const MongoClient = require('mongodb').MongoClient
 ObjectId = require('mongodb').ObjectId
 const mongodbUrl = "mongodb://localhost:27017"
-const resize = require('./resize')
 
 let db
 const dbName = "image-db"
@@ -85,40 +84,16 @@ app.post("/upload", (req, res) => {
 
                 let imageObject = {}
 
-                imageObject.type = image.mimeType
-                imageObject.path = image.path
-                imageObject.link = image.path.replace("public", "").replace(/\\/g, "/")
-                imageObject.timeUploaded = Date.now()
+                imageObject.path = image.path.replace("public", "").replace(/\\/g, "/")
 
-                sizeOf("public/" + imageObject.link, (err, sizes) => {
-
-                    if(err) {
-                        error(err)
-                    } else {
-                        success(sizes)
-                    }
-                })
-
-                const error = (err) => {
-
-                    console.log(err)
-
-                }
-
-                const success = (data) => {
-
-                    imageObject.width = data.width
-                    imageObject.height = data.height
-                    
-                    console.log(imageObject)
-
-                }
-                
+                var dimensions = sizeOf("public/" + imageObject.path);
+                imageObject.width = dimensions.width
+                imageObject.height = dimensions.height
                 return imageObject
-                
             })
 
-
+            console.log("imagearray:",imagesArray)
+            
             db.collection("uploadtest2").insertMany(imagesArray, (err, result) => {
 
                 if (err) {
@@ -139,16 +114,15 @@ app.post("/upload", (req, res) => {
 
 app.get("/images", (req, res) => {
 
-    db.collection('images').find().toArray((err, result) => {
-
+    db.collection('uploadtest2').find().toArray((err, result) => {
+        console.log(result)
         const imageArray = result.map((image) => {
             return image
         })
-
+        console.log(imageArray)
         if (err) {
             return cb(new Error(err))
         }
-
         res.render("images", {
             images: imageArray,
             url: req.protocol + "://" + req.get("host"),
@@ -168,51 +142,6 @@ app.get("/collection", (req, res) => {
 });
 
 // resize test
-
-app.get('/test', (req, res) => {
-
-    const imageWidthString = req.query.width;
-    const imageHeightString = req.query.height;
-
-    let width, height
-
-    if (imageWidthString) {
-        width = parseInt(imageWidthString)
-    }
-
-    if (imageHeightString) {
-        height = parseInt(imageHeightString)
-    }
-
-    sharp("test1.png")
-    .resize(width, height)
-    .toFile("public/output/output.png", (err) => {
-
-        console.log(err)
-
-    })
-
-    // const imageWidthString = req.query.width,
-    //     imageFormatString = req.query.format,
-    //     imageHeightString = req.query.height
-
-    // let width, height
-    // if (imageWidthString) {
-    //     width = parseInt(imageWidthString)
-    // }
-    // if (imageHeightString) {
-    //     height = parseInt(imageHeightString)
-    // }
-
-    // res.type(`image/${imageFormatString || 'png'}`)
-
-    // const resized = resize("test1.png", imageFormatString, width, height)
-
-    // console.log(resized)
-
-
-})
-
 
 // set static directory
 app.use(express.static('public'));
