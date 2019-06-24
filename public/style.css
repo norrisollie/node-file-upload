@@ -18,7 +18,8 @@ body {
 
 #container {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto auto 1fr;
+    grid-template-columns: 1fr;
     grid-gap: 5px;
     justify-content: center;
     align-items: center;
@@ -32,6 +33,16 @@ body {
 
 .section {
     padding: 5px 0;
+}
+
+#links {
+    grid-row-start: 1;
+    grid-row-end: 2;
+}
+
+#title {
+    grid-row-start: 2;
+    grid-row-end: 3;
 }
 
 #title h1 {

@@ -3,10 +3,12 @@ const bodyParser = require("body-parser")
 const multer = require("multer")
 const path = require("path")
 const assert = require("assert")
-const sharp = require("sharp")
+const sizeOf = require("image-size")
+const fs = require("fs")
 const MongoClient = require('mongodb').MongoClient
 ObjectId = require('mongodb').ObjectId
 const mongodbUrl = "mongodb://localhost:27017"
+const resize = require('./resize')
 
 let db
 const dbName = "image-db"
@@ -30,7 +32,7 @@ const port = 3000
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -81,17 +83,43 @@ app.post("/upload", (req, res) => {
 
             const imagesArray = req.files.map((image) => {
 
-                const imageObject = {}
+                let imageObject = {}
 
                 imageObject.type = image.mimeType
                 imageObject.path = image.path
                 imageObject.link = image.path.replace("public", "").replace(/\\/g, "/")
                 imageObject.timeUploaded = Date.now()
 
+                sizeOf("public/" + imageObject.link, (err, sizes) => {
+
+                    if(err) {
+                        error(err)
+                    } else {
+                        success(sizes)
+                    }
+                })
+
+                const error = (err) => {
+
+                    console.log(err)
+
+                }
+
+                const success = (data) => {
+
+                    imageObject.width = data.width
+                    imageObject.height = data.height
+                    
+                    console.log(imageObject)
+
+                }
+                
                 return imageObject
+                
             })
 
-            db.collection("images").insertMany(imagesArray, (err, result) => {
+
+            db.collection("uploadtest2").insertMany(imagesArray, (err, result) => {
 
                 if (err) {
                     return console.log(err)
@@ -129,6 +157,62 @@ app.get("/images", (req, res) => {
     })
 
 })
+
+app.get("/collection", (req, res) => {
+
+    db.collection('uploadtest2').find().toArray((err, result) => {
+        
+        res.send(result)
+
+    })
+});
+
+// resize test
+
+app.get('/test', (req, res) => {
+
+    const imageWidthString = req.query.width;
+    const imageHeightString = req.query.height;
+
+    let width, height
+
+    if (imageWidthString) {
+        width = parseInt(imageWidthString)
+    }
+
+    if (imageHeightString) {
+        height = parseInt(imageHeightString)
+    }
+
+    sharp("test1.png")
+    .resize(width, height)
+    .toFile("public/output/output.png", (err) => {
+
+        console.log(err)
+
+    })
+
+    // const imageWidthString = req.query.width,
+    //     imageFormatString = req.query.format,
+    //     imageHeightString = req.query.height
+
+    // let width, height
+    // if (imageWidthString) {
+    //     width = parseInt(imageWidthString)
+    // }
+    // if (imageHeightString) {
+    //     height = parseInt(imageHeightString)
+    // }
+
+    // res.type(`image/${imageFormatString || 'png'}`)
+
+    // const resized = resize("test1.png", imageFormatString, width, height)
+
+    // console.log(resized)
+
+
+})
+
 
 // set static directory
 app.use(express.static('public'));
