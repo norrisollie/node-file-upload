@@ -82,7 +82,7 @@ app.post("/upload", (req, res) => {
 
             const imagesArray = req.files.map((image) => {
 
-                let imageObject = {}
+                var imageObject = {}
 
                 imageObject.path = image.path.replace("public", "").replace(/\\/g, "/")
 
@@ -134,15 +134,18 @@ app.get("/images", (req, res) => {
 
 app.get("/collection", (req, res) => {
 
-    db.collection('uploadtest2').find().toArray((err, result) => {
+    db.collection('u').find().toArray((err, result) => {
         
         res.send(result)
 
     })
 });
 
+<<<<<<< HEAD
 // resize test
 
+=======
+>>>>>>> master
 // set static directory
 app.use(express.static('public'));
 
