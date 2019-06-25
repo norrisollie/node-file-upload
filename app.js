@@ -8,7 +8,6 @@ const fs = require("fs")
 const MongoClient = require('mongodb').MongoClient
 ObjectId = require('mongodb').ObjectId
 const mongodbUrl = "mongodb://localhost:27017"
-const resize = require('./resize')
 
 let db
 const dbName = "image-db"
@@ -87,22 +86,13 @@ app.post("/upload", (req, res) => {
 
                 imageObject.path = image.path.replace("public", "").replace(/\\/g, "/")
 
-                
-                sizeOf("public/" + imageObject.path, function (err, dimensions) {
-                    if (err) {
-                        console.log(err)
-                    }else{
-                        imageObject.width = dimensions.width
-                        imageObject.height = dimensions.height
-                    }
-                    return imageObject
-                  });
-                  console.log(imageObject)
-            return imageObject
-                
+                var dimensions = sizeOf("public/" + imageObject.path);
+                imageObject.width = dimensions.width
+                imageObject.height = dimensions.height
+                return imageObject
             })
 
-            console.log(imagesArray)
+            console.log("imagearray:",imagesArray)
             
             db.collection("uploadtest2").insertMany(imagesArray, (err, result) => {
 
@@ -124,16 +114,15 @@ app.post("/upload", (req, res) => {
 
 app.get("/images", (req, res) => {
 
-    db.collection('images').find().toArray((err, result) => {
-
+    db.collection('uploadtest2').find().toArray((err, result) => {
+        console.log(result)
         const imageArray = result.map((image) => {
             return image
         })
-
+        console.log(imageArray)
         if (err) {
             return cb(new Error(err))
         }
-
         res.render("images", {
             images: imageArray,
             url: req.protocol + "://" + req.get("host"),
@@ -152,6 +141,11 @@ app.get("/collection", (req, res) => {
     })
 });
 
+<<<<<<< HEAD
+// resize test
+
+=======
+>>>>>>> master
 // set static directory
 app.use(express.static('public'));
 
