@@ -22,8 +22,6 @@ MongoClient.connect(mongodbUrl, (err, client) => {
 
     console.log("Connected to DB successfully!")
 
-    // client.close()
-
 })
 
 const app = express()
@@ -70,67 +68,96 @@ const uploadSettings = multer({
 
 const uploadImages = uploadSettings.array("images");
 
-// upload files route, handles form 
+// upload route
+// handles upload of files
 app.post("/upload", (req, res) => {
 
     uploadImages(req, res, (err) => {
+
+        //if else statement 
         if (err) {
-
             console.log("Error:", err.message)
-
         } else {
 
+            // map array of uploaded files
+            // create an object
+            // get the path, dimensions (using a module)
             const imagesArray = req.files.map((image) => {
 
-                var imageObject = {}
+                const imageObject = {}
 
                 imageObject.path = image.path.replace("public", "").replace(/\\/g, "/")
 
-                var dimensions = sizeOf("public/" + imageObject.path);
+                const dimensions = sizeOf("public/" + imageObject.path)
+
                 imageObject.width = dimensions.width
                 imageObject.height = dimensions.height
+
                 return imageObject
             })
-
-            console.log("imagearray:",imagesArray)
             
+            // add the object to the database
             db.collection("uploadtest2").insertMany(imagesArray, (err, result) => {
 
                 if (err) {
-                    return console.log(err)
+                    console.log("Error:", err)
+                } else {
+                    console.log("Image added to the database")
                 }
-
-                // db.collection("resized-images").insertMany()
-
-                console.log("something saved to the database")
-
             })
-
         }
     })
-
     res.redirect("/")
 })
 
+// route to show uploaded images
 app.get("/images", (req, res) => {
 
-    db.collection('uploadtest2').find().toArray((err, result) => {
-        console.log(result)
-        const imageArray = result.map((image) => {
+    // find collection
+    db.collection('uploadtest2').find().toArray((err, images) => {
+
+        // logs the contents of the database
+        console.log(images)
+
+        // map through database to get images
+        // return images individually
+        const imagesInDatabase = images.map((image) => {
             return image
         })
-        console.log(imageArray)
-        if (err) {
-            return cb(new Error(err))
+
+        if(err) {
+            console.log("Error:", err)
         }
+
+        console.log(imagesInDatabase)
+
         res.render("images", {
-            images: imageArray,
+            images: imagesInDatabase,
             url: req.protocol + "://" + req.get("host"),
         })
 
-    })
 
+    })
 })
+
+
+//     db.collection('uploadtest2').find().toArray((err, result) => {
+//         console.log(result)
+//         const imageArray = result.map((image) => {
+//             return image
+//         })
+//         console.log(imageArray)
+//         if (err) {
+//             return cb(new Error(err))
+//         }
+//         res.render("images", {
+//             images: imageArray,
+//             url: req.protocol + "://" + req.get("host"),
+//         })
+
+//     })
+
+// })
 
 app.get("/collection", (req, res) => {
 
@@ -141,11 +168,6 @@ app.get("/collection", (req, res) => {
     })
 });
 
-<<<<<<< HEAD
-// resize test
-
-=======
->>>>>>> master
 // set static directory
 app.use(express.static('public'));
 
