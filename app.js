@@ -1,180 +1,164 @@
-const express = require("express")
-const bodyParser = require("body-parser")
-const multer = require("multer")
-const path = require("path")
-const assert = require("assert")
-const sizeOf = require("image-size")
-const fs = require("fs")
-const MongoClient = require('mongodb').MongoClient
-ObjectId = require('mongodb').ObjectId
-const mongodbUrl = "mongodb://localhost:27017"
+const express = require("express");
+const bodyParser = require("body-parser");
+const multer = require("multer");
+const path = require("path");
+const assert = require("assert");
+const sizeOf = require("image-size");
+const fs = require("fs");
+const url = require("url");
+const MongoClient = require("mongodb").MongoClient;
+ObjectId = require("mongodb").ObjectId;
+const mongodbUrl = "mongodb://localhost:27017";
 
-let db
-const dbName = "image-db"
+let db;
+const dbName = "image-db";
 
 MongoClient.connect(mongodbUrl, (err, client) => {
+    ObjectId = require("mongodb").ObjectId;
 
-    ObjectId = require('mongodb').ObjectId
+    assert.equal(null, err);
 
-    assert.equal(null, err)
+    db = client.db(dbName);
 
-    db = client.db(dbName)
+    console.log("Connected to DB successfully!");
+});
 
-    console.log("Connected to DB successfully!")
+const app = express();
+const port = 3000;
 
-})
-
-const app = express()
-const port = 3000
-
-app.set('view engine', 'ejs');
+app.set("view engine", "ejs");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "public/uploads")
+        cb(null, "public/uploads");
     },
     filename: (req, file, cb) => {
-        cb(null, file.fieldname + "-" + Date.now() + path.extname(file.originalname))
+        cb(
+            null,
+            file.fieldname + "-" + Date.now() + path.extname(file.originalname)
+        );
     }
-})
+});
 
 const uploadSettings = multer({
-
     storage: storage,
 
     limits: {
-
         fileSize: 50 * 1024 * 1024
-
     },
 
     fileFilter: (req, file, cb) => {
-
-        const extension = path.extname(file.originalname)
+        const extension = path.extname(file.originalname);
 
         if (extension !== ".jpg" && extension !== ".jpeg" && extension !== ".png") {
-
-            return cb(new Error('Only JPEGs or PNGs can be uploaded.'))
-
+            return cb(new Error("Only JPEGs or PNGs can be uploaded."));
         } else {
-
-            cb(null, true)
-
+            cb(null, true);
         }
     }
-})
+});
 
 const uploadImages = uploadSettings.array("images");
 
 // upload route
 // handles upload of files
 app.post("/upload", (req, res) => {
-
-    uploadImages(req, res, (err) => {
-
-        //if else statement 
+    uploadImages(req, res, err => {
+        //if else statement
         if (err) {
-            console.log("Error:", err.message)
+            console.log("Error:", err.message);
         } else {
-
             // map array of uploaded files
             // create an object
             // get the path, dimensions (using a module)
-            const imagesArray = req.files.map((image) => {
+            const imagesArray = req.files.map(image => {
+                const imageObject = {};
 
-                const imageObject = {}
+                imageObject.path = image.path.replace("public", "").replace(/\\/g, "/");
 
-                imageObject.path = image.path.replace("public", "").replace(/\\/g, "/")
+                const dimensions = sizeOf("public/" + imageObject.path);
 
-                const dimensions = sizeOf("public/" + imageObject.path)
+                imageObject.width = dimensions.width;
+                imageObject.height = dimensions.height;
 
-                imageObject.width = dimensions.width
-                imageObject.height = dimensions.height
+                return imageObject;
+            });
 
-                return imageObject
-            })
-            
             // add the object to the database
             db.collection("uploadtest2").insertMany(imagesArray, (err, result) => {
-
                 if (err) {
-                    console.log("Error:", err)
+                    console.log("Error:", err);
                 } else {
-                    console.log("Image added to the database")
+                    console.log("Image added to the database");
                 }
-            })
+            });
         }
-    })
-    res.redirect("/")
-})
+    });
+    res.redirect("/");
+});
 
 // route to show uploaded images
 app.get("/images", (req, res) => {
-
     // find collection
-    db.collection('uploadtest2').find().toArray((err, images) => {
+    db.collection("uploadtest2")
+        .find()
+        .toArray((err, images) => {
+            // logs the contents of the database
+            // console.log(images);
 
-        // logs the contents of the database
-        console.log(images)
+            // map through database to get images
+            // return images individually
+            const imagesInDatabase = images.map(image => {
+                return image;
+            });
 
-        // map through database to get images
-        // return images individually
-        const imagesInDatabase = images.map((image) => {
-            return image
-        })
+            if (err) {
+                console.log("Error:", err);
+            }
 
-        if(err) {
-            console.log("Error:", err)
-        }
+            // console.log(imagesInDatabase)
 
-        console.log(imagesInDatabase)
+            res.render("images", {
+                images: imagesInDatabase,
+                url: req.protocol + "://" + req.get("host")
+            });
+        });
+});
 
-        res.render("images", {
-            images: imagesInDatabase,
-            url: req.protocol + "://" + req.get("host"),
-        })
+// route to show the entries in database
+app.get("/image-db", (req, res) => {
+    db.collection("uploadtest2")
+        .find()
+        .toArray((err, images) => {
+            if (err) {
+                console.log("Error:", err);
+            }
+            res.send(images);
+        });
+});
 
+app.get("/delete/:id", (req, res) => {
 
+    const id = req.url.split("/")[2];
+
+    console.log(id)
+
+    db.collection("uploadtest2").deleteOne({ _id: ObjectId(id)}, (err, result) => {
+        if(err) console.log(err)
+        console.log(result)
     })
-})
-
-
-//     db.collection('uploadtest2').find().toArray((err, result) => {
-//         console.log(result)
-//         const imageArray = result.map((image) => {
-//             return image
-//         })
-//         console.log(imageArray)
-//         if (err) {
-//             return cb(new Error(err))
-//         }
-//         res.render("images", {
-//             images: imageArray,
-//             url: req.protocol + "://" + req.get("host"),
-//         })
-
-//     })
-
-// })
-
-app.get("/collection", (req, res) => {
-
-    db.collection('u').find().toArray((err, result) => {
-        
-        res.send(result)
-
-    })
+    res.redirect("/images")
 });
 
 // set static directory
-app.use(express.static('public'));
+app.use(express.static("public"));
 
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
     res.render("index");
-})
+});
 
 app.listen(port, () => {
-    console.log("App is running on port", port)
-})
+    console.log("App is running on port", port);
+});

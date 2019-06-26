@@ -14,8 +14,11 @@
     <div id="wrapper">
         <div id="container">
 
-            <% images.forEach(function(image) { %>
-            <img src="<%= url + image.path %>">
+            <% images.forEach((image) => { %>
+                <div class="image">
+                    <img src="<%= url + image.path %>" width="<%=image.width %>" height="<%=image.height %>" data-image-id="<%=image._id %>">
+                    <a href="/delete/<%=image._id %>">DELETE</a>
+                </div>
             <%})%>
 
         </div>
