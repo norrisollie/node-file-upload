@@ -30,6 +30,7 @@ app.set("view engine", "ejs");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, "public/uploads");
@@ -65,6 +66,9 @@ const uploadImages = uploadSettings.array("images");
 // upload route
 // handles upload of files
 app.post("/upload", (req, res) => {
+
+    // console.log(req)
+
     uploadImages(req, res, err => {
         //if else statement
         if (err) {
@@ -73,6 +77,9 @@ app.post("/upload", (req, res) => {
             // map array of uploaded files
             // create an object
             // get the path, dimensions (using a module)
+
+            // console.log(req.body.projectname)
+
             const imagesArray = req.files.map(image => {
                 const imageObject = {};
 
@@ -86,18 +93,29 @@ app.post("/upload", (req, res) => {
                 return imageObject;
             });
 
+            const collectionName = req.body.projectname
+
             // add the object to the database
-            db.collection("uploadtest2").insertMany(imagesArray, (err, result) => {
+            db.collection("projects").insertMany(imagesArray, (err, result) => {
                 if (err) {
                     console.log("Error:", err);
                 } else {
-                    console.log("Image added to the database");
+                    console.log("Image added to the projects collection.");
                 }
             });
         }
     });
     res.redirect("/");
 });
+
+app.get("/collections", (req, res) => {
+
+    db.listCollections().toArray((err, collections) => {
+
+        res.send(collections);
+
+    })
+})
 
 // route to show uploaded images
 app.get("/images", (req, res) => {
