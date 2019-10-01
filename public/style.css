@@ -4,6 +4,7 @@ body {
     padding: 0;
     margin: 0;
     font-family: "Open Sans";
+    box-sizing: border-box;
 }
 
 #wrapper {
@@ -23,94 +24,53 @@ body {
     display: flex;
     flex-direction: column;
     width: 100%;
+    max-width: 1000px;
     height: 100%;
     background-color: #eee;
     padding: 20px;
 }
 
-/* #title {
-
+.project {
+    background-color: #FFF;
+    padding: 10px;
+    margin-bottom: 10px;
 }
 
-#form {
-
-} */
-
-#form > form {
-    display: flex;
-    flex-direction: column;
-}
-
-#form > form * {
-    margin-right: auto;
-}
-
-
-
-/* 
-#wrapper {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: grid;
-    grid-template-rows: 1fr 2fr 1fr;
-    grid-template-columns: 1fr 2fr 1fr;
-}
-
-#container {
-    display: grid;
-    grid-template-rows: auto auto 1fr;
-    grid-template-columns: 1fr;
-    grid-gap: 5px;
-    justify-content: center;
-    align-items: center;
-    grid-row-start: 2;
-    grid-row-end: 3;
-    grid-column-start: 2;
-    grid-column-end: 3;
-    background-color: #eee;
-    padding: 20px;
-    flex-direction: column;
-}
-
-.section {
-    padding: 5px 0;
-}
-
-#links {
-    grid-row-start: 1;
-    grid-row-end: 2;
-}
-
-#title {
-    grid-row-start: 2;
-    grid-row-end: 3;
-}
-
-#title h1 {
+h1.project-name {
     font-size: 24px;
-    font-weight: bold;
-    text-align: center;
-    margin: 0;
+    margin: 5px 0;
 }
 
-#form {
+.name-delete {
     display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
+    justify-content: space-between;
+    padding: 10px;
+}
+
+.images {
+    background-color: #eee;
+    padding: 10px;
 }
 
 img {
     max-width: 100%;
 }
 
-.image {
-    width: 100%;
+.form-section {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-} */
+    flex-direction: column;
+    margin-bottom: 5px;
+}
+
+.form-section > h2 {
+    font-size: 18px;
+    margin: 5px 0;
+    font-weight: bold;
+}
+
+.form-section > input[type=text] {
+    padding: 10px;
+    font-size: 16px;
+    outline: none;
+    border: 1px solid #999;
+}

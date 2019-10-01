@@ -14,31 +14,32 @@ let db;
 const dbName = "image-db";
 
 MongoClient.connect(mongodbUrl, (err, client) => {
-    ObjectId = require("mongodb").ObjectId;
+    ObjectId = require("mongodb").ObjectId
 
-    assert.equal(null, err);
+    assert.equal(null, err)
 
-    db = client.db(dbName);
+    db = client.db(dbName)
 
-    console.log("Connected to DB successfully!");
+    console.log("Connected to DB successfully!")
 });
 
-const app = express();
-const port = 3000;
+const app = express()
+const port = 3000
 
-app.set("view engine", "ejs");
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
+app.set("view engine", "ejs")
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "public/uploads");
+        cb(null, "public/uploads")
     },
     filename: (req, file, cb) => {
+        console.log(file)
+
         cb(
             null,
-            file.fieldname + "-" + Date.now() + path.extname(file.originalname)
+            Date.now() + "-" + file.originalname
         );
     }
 });
@@ -51,123 +52,241 @@ const uploadSettings = multer({
     },
 
     fileFilter: (req, file, cb) => {
-        const extension = path.extname(file.originalname);
+        const extension = path.extname(file.originalname)
 
         if (extension !== ".jpg" && extension !== ".jpeg" && extension !== ".png") {
-            return cb(new Error("Only JPEGs or PNGs can be uploaded."));
+            return cb(new Error("Only JPEGs or PNGs can be uploaded."))
         } else {
             cb(null, true);
         }
     }
 });
 
-const uploadImages = uploadSettings.array("images");
+const projectName = uploadSettings.none()
+
+const uploadImages = uploadSettings.any()
 
 // upload route
 // handles upload of files
 app.post("/upload", (req, res) => {
 
-    // console.log(req)
+    let projectNames
 
-    uploadImages(req, res, err => {
-        //if else statement
-        if (err) {
-            console.log("Error:", err.message);
-        } else {
-            // map array of uploaded files
-            // create an object
-            // get the path, dimensions (using a module)
+    // projectName(req, res, err => {
+    //     projectNames = req.body
+    //     console.log(projectNames)
 
-            // console.log(req.body.projectname)
+        uploadImages(req, res, err => {
 
-            const imagesArray = req.files.map(image => {
-                const imageObject = {};
+            if(err) console.log("Error:", err)
 
-                imageObject.path = image.path.replace("public", "").replace(/\\/g, "/");
+            console.log(req.files)
 
-                const dimensions = sizeOf("public/" + imageObject.path);
+        })
 
-                imageObject.width = dimensions.width;
-                imageObject.height = dimensions.height;
+    // })
 
-                return imageObject;
-            });
+    console.log("RETURNED: " + projectNames)
 
-            const collectionName = req.body.projectname
 
-            // add the object to the database
-            db.collection("projects").insertMany(imagesArray, (err, result) => {
-                if (err) {
-                    console.log("Error:", err);
-                } else {
-                    console.log("Image added to the projects collection.");
-                }
-            });
-        }
-    });
-    res.redirect("/");
-});
+
+    // uploadImages(req, res, err => {
+
+    //     console.log(req.body.projectname)
+
+    // })
+
+    // console.log(projectName)
+
+    // db.collection("projects").findOne({ "projectname": { $exists: true } }, (err, result) => {
+        
+        
+    //     if(result === null || projectName !== result.projectname) {
+
+    //         uploadImages((req, res, err) => {
+
+    //             if(err) console.log("Error:", err)
+
+    //             const imagesArray = req.files.map(image => {
+                
+    //                 const imageObject = {}
+
+    //                 imageObject.path = image.path.replace("public", "").replace(/\\/g, "/")
+    //                 const dimensions = sizeOf("public/" + imageObject.path)
+
+    //                 imageObject.originalname = image.originalname.split(".")[0]
+    //                 imageObject.filename = image.filename
+    //                 imageObject.width = dimensions.width
+    //                 imageObject.height = dimensions.height
+    
+    //                 return imageObject;
+
+    //             })
+
+    //             const projectObject = {};
+    //             projectObject.projectname = projectName
+    //             projectObject.projectImages = imagesArray
+                
+    //             const projectArray = [];
+    //             projectArray.push(projectObject)
+
+    //             db.collection("projects").insertMany(projectArray, (err, result) => {
+
+    //                 if (err) {
+    //                     console.log("Error:", err);
+    //                 } else {
+    //                     console.log("Image added to the projects collection.")
+    //                 }
+
+    //             })
+
+    //         })
+
+    //     } else {
+
+    //         console.log("Project name already exists in database, choose another name.")
+
+    //     }
+
+    //     res.redirect("/");
+
+    // })
+})
+
+// // upload route
+// // handles upload of files
+// app.post("/upload", (req, res) => {
+//     // console.log(req)
+
+//     uploadImages(req, res, err => {
+//         //if else statement
+//         if (err) {
+//             console.log("Error:", err.message)
+//         } else {
+
+//             const imagesArray = req.files.map(image => {
+
+//                 const imageObject = {}
+                
+//                 imageObject.path = image.path.replace("public", "").replace(/\\/g, "/")
+//                 const dimensions = sizeOf("public/" + imageObject.path)
+
+//                 imageObject.originalname = image.originalname.split(".")[0]
+//                 imageObject.filename = image.filename
+//                 imageObject.width = dimensions.width
+//                 imageObject.height = dimensions.height
+
+//                 return imageObject;
+
+//             });
+
+//             const projectName = req.body.projectname;
+            
+//             projectObject = {};
+//             projectObject.projectname = projectName
+//             projectObject.projectImages = imagesArray
+            
+//             const projectArray = [];
+//             projectArray.push(projectObject)
+
+//             db.collection("projects").findOne({ "projectname": { $exists: true } }, (err, result) => {
+
+//                 if(result === null || projectName !== result.projectname) {
+
+//                     db.collection("projects").insertMany(projectArray, (err, result) => {
+
+//                         if (err) {
+//                             console.log("Error:", err);
+//                         } else {
+//                             console.log("Image added to the projects collection.")
+//                         }
+
+//                     })
+
+//                 } else {
+//                     console.log("Project name already exists in database, choose another name.")
+//                 }
+//             })
+//         }
+//     })
+//     res.redirect("/");
+// })
 
 app.get("/collections", (req, res) => {
-
     db.listCollections().toArray((err, collections) => {
-
-        res.send(collections);
-
+        res.send(collections)
     })
 })
 
 // route to show uploaded images
-app.get("/images", (req, res) => {
+app.get("/allprojects", (req, res) => {
     // find collection
-    db.collection("uploadtest2")
-        .find()
-        .toArray((err, images) => {
-            // logs the contents of the database
-            // console.log(images);
+    db.collection("projects").find().toArray((err, projects) => {
 
-            // map through database to get images
-            // return images individually
-            const imagesInDatabase = images.map(image => {
-                return image;
+            if (err) console.log(err);
+
+            const projectsInDatabase = projects.map(project => {
+
+                return project;
+
             });
 
-            if (err) {
-                console.log("Error:", err);
-            }
-
-            // console.log(imagesInDatabase)
-
-            res.render("images", {
-                images: imagesInDatabase,
+            res.render("projects", {
+                projects: projectsInDatabase,
                 url: req.protocol + "://" + req.get("host")
             });
         });
 });
 
 // route to show the entries in database
-app.get("/image-db", (req, res) => {
-    db.collection("uploadtest2")
-        .find()
-        .toArray((err, images) => {
-            if (err) {
-                console.log("Error:", err);
-            }
-            res.send(images);
-        });
-});
+app.get("/projects", (req, res) => {
 
-app.get("/delete/:id", (req, res) => {
+    db.collection("projects").find().toArray((err, images) => {
+
+            if (err) {
+
+                console.log("Error:", err)
+
+            }
+
+            res.send(images)
+        
+        })
+})
+
+app.get("/delete/:id/:originalname", (req, res) => {
 
     const id = req.url.split("/")[2];
+    const originalname = req.url.split("/")[3];
 
-    console.log(id)
+    db.collection("projects").findOne(
+        { _id: ObjectId(id) }, (err, result) => {
 
-    db.collection("uploadtest2").deleteOne({ _id: ObjectId(id)}, (err, result) => {
-        if(err) console.log(err)
-        console.log(result)
-    })
-    res.redirect("/images")
+            for(let i = 0; i < result.projectImages.length; i++) {
+
+                if(result.projectImages[i].originalname === originalname) {
+
+                    const filename = result.projectImages[i].filename
+                    const path = result.projectImages[i].path
+                    const originalname = result.projectImages[i].originalname
+
+                    fs.unlink(__dirname + "/public" + path, (err) => {
+                        if(err) console.log("Error:", err)
+                        console.log("Deleted:", __dirname + "/public" + path)
+                    })
+
+                }
+            }
+        })
+
+    db.collection("projects").updateOne(
+        { _id: ObjectId(id) },
+        { $pull: { projectImages: { originalname } } }, (err) =>{
+            if(err) console.log(err)
+            console.log(req.params)
+        }
+    );
+    res.redirect("/allprojects");
 });
 
 // set static directory

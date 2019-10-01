@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Project Uploader</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap" rel="stylesheet">
+</head>
+
+    <body>
+        <div id="wrapper">
+            <div id="container">
+                <% projects.forEach((project) => { %>
+                    <div class="project" data-project-id="<%= project._id %>">
+                        <h1 class="project-name"><%= project.projectname %></h1>
+                        <div class="images">
+                            <% for(var i=0; i < project.projectImages.length; i++) { %>
+                                <div class="name-delete">
+                                    <div class="name"><%= project.projectImages[i].originalname %></div>
+                                    <div class="delete"><a class="link" href="/delete/<%= project._id %>/<%= project.projectImages[i].originalname %>">Delete Image</a></div>
+                                </div>
+                                <div class="image-box">
+                                    <img class="image" src="<%= url + project.projectImages[i].path %>">
+                                </div>
+                            <%}%>
+                        </div>
+                    </div>
+                <%})%>
+            </div>
+        </div>
+    </body>
+</html>
